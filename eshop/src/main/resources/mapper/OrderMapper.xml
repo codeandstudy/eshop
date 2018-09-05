@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.eshop.dao.OrderMapper">
+
+    <insert id="doInsert" parameterType="order" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (member_id, address_id) VALUES (#{memberId},#{addressId})
+    </insert>
+
+    <insert id="doInsertDetail" parameterType="orderDetail">
+        INSERT INTO order_detail (order_id, product_id, quantity, price) VALUES
+        <foreach collection="list" item="orderDetail" separator=",">
+            (#{orderDetail.orderId},#{orderDetail.productId},#{orderDetail.quantity},#{orderDetail.price})
+        </foreach>
+    </insert>
+
+    <resultMap id="orderListResultMap" type="orderList">
+        <id property="id" column="id"/>
+        <result property="createTime" column="create_time"/>
+        <association property="address" javaType="address">
+            <id property="aid" column="address_id"/>
+            <result property="addr" column="addr"/>
+            <result property="name" column="address_name"/>
+            <result property="tel" column="tel"/>
+        </association>
+        <collection property="products" ofType="productInCart">
+            <id property="pid" column="pid"/>
+            <result property="name" column="product_name"/>
+            <result property="price" column="price"/>
+            <result property="imgUrl" column="img_url"/>
+            <result property="quantity" column="quantity"/>
+        </collection>
+    </resultMap>
+
+    <select id="queryByMid" parameterType="int" resultMap="orderListResultMap">
+        SELECT orders.*,
+            order_detail.*,
+            address.*,address.name address_name,
+            product.*,product.name product_name
+        FROM orders,order_detail,address,product
+        WHERE order_detail.order_id = orders.id
+              AND address.aid = orders.address_id
+              AND product.pid = order_detail.product_id
+              AND member_id = #{mid}
+        ORDER BY orders.create_time DESC
+    </select>
+
+</mapper>

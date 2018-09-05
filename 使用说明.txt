@@ -1,0 +1,5 @@
+1. 建立数据库 mall, 导入 建库.sql 创建数据表;
+2. 用 IDEA 打开工程文件 eshop;
+3. 配置 application.properties 中的相关数据库参数；
+4. 运行 EshopApplication 主方法 main（）；
+5. 使用 chrome 打开 localhost:8081/index ;

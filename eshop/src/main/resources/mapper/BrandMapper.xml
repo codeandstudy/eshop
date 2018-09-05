@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.eshop.dao.BrandMapper">
+
+    <select id="query" parameterType="map" resultType="map">
+        SELECT
+        brand.bid,
+        name,
+        ifnull(concat(format(count / (SELECT count(pid)
+        FROM product) * 100, 0), '%'), '0%') percent,
+        ifnull(count, 0) count,
+        date_format(brand.create_time,'%Y-%m-%d %H:%i:%s') create_time,
+        brand.status
+        FROM brand
+        LEFT JOIN (SELECT
+        bid,
+        count(bid) count
+        FROM product
+        GROUP BY bid) t
+        ON (t.bid = brand.bid)
+        <if test="name != null">
+            AND name LIKE CONCAT('%',#{name},'%')
+        </if>
+        <if test="start != null &amp;&amp; pageSize != null">
+            LIMIT #{start},#{pageSize}
+        </if>
+    </select>
+
+    <select id="getCount" parameterType="map" resultType="int">
+        SELECT count(brand.bid) count
+        FROM brand
+        LEFT JOIN (SELECT
+        bid,
+        count(bid) count
+        FROM product
+        GROUP BY bid) t
+        ON (t.bid = brand.bid)
+        <if test="name != null">
+            AND name LIKE CONCAT('%',#{name},'%')
+        </if>
+    </select>
+
+    <insert id="doInsert" parameterType="brand">
+        INSERT INTO brand (name, create_time, status) VALUES (#{name}, current_timestamp, #{status})
+    </insert>
+
+    <update id="doUpdate" parameterType="brand">
+        UPDATE brand
+        SET name = #{name}, status = #{status}
+        WHERE bid = #{bid}
+    </update>
+
+    <select id="queryByName" parameterType="string" resultType="brand">
+        SELECT *
+        FROM brand
+        WHERE name = #{name}
+    </select>
+
+    <select id="queryAll" resultType="brand">
+        SELECT
+            bid,
+            name,
+            status
+        FROM brand
+    </select>
+
+</mapper>

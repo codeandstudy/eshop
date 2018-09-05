@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springboot.eshop.dao.ProductMapper">
+
+    <!--<cache/>-->
+
+    <resultMap id="productMap" type="product">
+        <id property="pid" column="pid"/>
+        <result property="originalPrice" column="original_price"/>
+        <result property="imgUrl" column="img_url"/>
+        <result property="salesVolume" column="sales_volume"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="price" column="price"/>
+        <result property="inventory" column="inventory"/>
+        <result property="createTime" column="create_time"/>
+        <result property="status" column="status"/>
+        <association property="category" javaType="category">
+            <id property="cid" column="cid"/>
+            <result property="name" column="cname"/>
+        </association>
+        <association property="brand" javaType="brand">
+            <id property="bid" column="bid"/>
+            <result property="name" column="bname"/>
+        </association>
+    </resultMap>
+
+    <select id="query" resultMap="productMap" parameterType="map">
+        SELECT
+        pid,
+        category.cid,
+        category.name cname,
+        brand.bid,
+        brand.name bname,
+        product.name,
+        description,
+        original_price,
+        price,
+        img_url,
+        inventory,
+        sales_volume,
+        date_format(product.create_time,'%Y-%m-%d %H:%i:%s') create_time,
+        product.status
+        FROM product
+        JOIN category ON product.cid = category.cid
+        JOIN brand ON product.bid = brand.bid
+        WHERE 1 = 1
+        <if test="cid != null">
+            AND product.cid = #{cid}
+        </if>
+        <if test="bid != null">
+            AND product.bid = #{bid}
+        </if>
+        <if test="name != null">
+            AND product.name LIKE concat('%',#{name},'%')
+        </if>
+    </select>
+
+    <select id="queryById" parameterType="int" resultMap="productMap">
+        SELECT
+            pid,
+            category.cid,
+            category.name                                         cname,
+            brand.bid,
+            brand.name                                            bname,
+            product.name,
+            description,
+            original_price,
+            price,
+            img_url,
+            inventory,
+            sales_volume,
+            date_format(product.create_time, '%Y-%m-%d %H:%i:%s') create_time,
+            product.status
+        FROM product
+            JOIN category ON product.cid = category.cid
+            JOIN brand ON product.bid = brand.bid
+        WHERE pid = #{pid}
+    </select>
+
+    <update id="updateSalesVolume">
+        UPDATE product
+        SET sales_volume = sales_volume + #{quantity}
+        WHERE pid = #{pid}
+    </update>
+
+    <update id="updateInventory">
+        UPDATE product
+        SET inventory = inventory - #{quantity}
+        WHERE pid = #{pid}
+    </update>
+
+    <insert id="doInsert" parameterType="product">
+        INSERT INTO product (cid, bid, name, description, original_price, price, img_url, inventory, create_time, status)
+        VALUES (#{category.cid}, #{brand.bid}, #{name}, #{description}, #{originalPrice}, #{price}, #{imgUrl},
+                #{inventory},
+                current_timestamp, #{status})
+    </insert>
+
+    <update id="doUpdate" parameterType="product">
+        UPDATE product
+        SET
+        <if test="category != null &amp;&amp; category.cid != null">
+            cid = #{category.cid},
+        </if>
+        <if test="brand != null &amp;&amp; brand.bid != null">
+            bid = #{brand.bid},
+        </if>
+        name = #{name},
+        description = #{description},
+        original_price = #{originalPrice},
+        price = #{price},
+        <if test="imgUrl != null">
+            img_url = #{imgUrl},
+        </if>
+        inventory = #{inventory},
+        status = #{status}
+        WHERE pid = #{pid}
+    </update>
+
+</mapper>
